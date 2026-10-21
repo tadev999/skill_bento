@@ -1,86 +1,214 @@
-# SkillBento
+# 🍱 SkillBento
 
 **Find a skill. Launch with context. Track the run.**
 
-Skills are scattered across repositories. Finding the right one, choosing its target project, and tracking progress creates unnecessary context switching.
+*A local-first VS Code extension that brings centralized skill discovery, guarded context injection, and real-time lifecycle tracking to AI coding agents.*
 
-SkillBento brings skill discovery and run history into VS Code.
+---
 
-- Browse by category; search by name or description.
-- Review a skill before launch; choose the target repository.
-- Add a requirement URL and optional request, file, or diff.
-- Track reported status, evidence, and results in **Runs**.
+## 💥 The Problem: The Chaos of AI Agent Skills
 
-## Get started
+As software teams adopt AI coding agents (such as GitHub Copilot in Agent mode), they encode specialized workflows, coding rules, and testing standards into **Skills** (defined via `SKILL.md` files).
 
-Requires VS Code Desktop 1.100+, a trusted workspace, and GitHub Copilot with Agent mode.
+However, without a dedicated management layer, working with agent skills quickly degenerates into friction and cognitive overload:
 
-1. From the extension directory, build and install the VSIX:
+```
+Before SkillBento:
+┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+│  Skills Lost in │  ==>  │ Manual Prompting│  ==>  │ "Black Box" Run │
+│  Multiple Repos │       │ & Context Drift │       │ & Fake "Done"s  │
+└─────────────────┘       └─────────────────┘       └─────────────────┘
+ • Digging in folders      • Missing repo boundaries • Lost in chat history
+ • Forgetting syntax       • No ticket/Jira linkage  • No artifact tracking
+ • Guessing capabilities   • Hallucinated changes    • Untracked blockers
+```
 
+### 1. The "Skill Sprawl" Nightmare
+Skills live buried inside nested folders across repositories (`.agents/skills/`, `.github/skills/`, submodules, monorepos). Developers constantly switch contexts, hunting through markdown files just to remember what skills exist, which roles they serve (Developer vs. Tester), or where their documentation lives.
+
+### 2. Context Drift & Wrong-Repo Disasters
+Invoking a skill manually requires crafting a chat prompt from scratch. When developers forget to explicitly scope target repository boundaries or omit strict constraints, AI agents frequently hallucinate edits across unintended workspace folders or violate project structures.
+
+### 3. The "Prompting Tax" & Repetitive Setup
+Launching a task properly requires: finding the exact skill path, attaching issue/Jira requirement URLs, including specific instructions, and setting verification criteria. Doing this manually for every task is tedious and error-prone.
+
+### 4. The "Black-Box" Execution Trap
+Once a prompt is sent to chat, it disappears into a scrolling conversation feed. If you work on other tasks or run multi-agent workflows, there is zero visibility into:
+- Did the agent actually start working?
+- Is it waiting for human approval or missing evidence?
+- Which files and artifacts were generated?
+
+### 5. The "Hallucinated Done" Illusion
+LLMs are prone to enthusiastically claiming *"Task completed!"* right after creating a half-finished file, without running tests, verifying acceptance criteria, or collecting real evidence.
+
+---
+
+## ✨ The Solution: How SkillBento Solves It
+
+SkillBento transforms how developers interact with agent skills by introducing a structured, local-first control center directly in VS Code's Activity Bar.
+
+```
+With SkillBento:
+┌──────────────────┐      ┌──────────────────┐      ┌──────────────────┐
+│ Centralized Bento│ ===> │ Guarded Launch   │ ===> │ Real-Time Run    │
+│ Catalog          │      │ Form with Scope  │      │ Tracker & Tools  │
+└──────────────────┘      └──────────────────┘      └──────────────────┘
+ • Auto-discovered skills  • Selected target repo    • Live status updates
+ • Filter by role/category • Validated ticket URL    • Artifact audit trail
+ • 1-click spec preview    • Pre-engineered prompt   • Copilot Tool integration
+```
+
+### 🍱 1. Centralized Bento Catalog
+- **Automatic Discovery:** Automatically scans `.agents/skills` and `.github/skills` across your open workspace folders and child repositories, plus any custom directories defined in `skillBento.skillRoots`.
+- **Intelligent Organization:** Categorizes skills into clean Bento boxes (*Requirements, Design, Implementation, Review, Testing, Workflow, Tools, Reference*).
+- **Fast Search & Role Filters:** Instantly filter by role (`dev`, `tester`, `all`) or fuzzy search by name and description.
+- **Instant Previews:** Review a skill's purpose and inputs with one click before running it.
+
+### 🎯 2. Guarded Launch Form (Context & Boundary Enforcement)
+- **Target Repository Sandboxing:** Explicitly select the target repository. SkillBento injects strict boundary constraints into the prompt, preventing cross-repo modifications.
+- **Requirement Verification:** Attach a validated Requirement URL (Jira, GitHub issue, PR) and optional custom requests or diffs.
+- **Airtight Engineered Prompts:** Automatically compiles a standardized prompt containing the exact skill path, repository boundary, requirement link, unique `runId`, and verification rules.
+
+### ⚡ 3. Live Run Tracker & Language Model Tool
+- **Native Copilot Agent Tool (`#skillBentoUpdateRun`):** Agents can report real-time status transitions (`running`, `pending_evidence`, `needs_approval`, `completed`, `failed`, `cancelled`) along with progress summaries directly to your VS Code UI.
+- **Dynamic Status Bar Monitoring:** At-a-glance status indicators in your VS Code status bar show active runs (`$(sync~spin) SkillBento: 1 running`) or pending checkpoints (`$(bell) SkillBento: 1 waiting`).
+- **Interactive Run Inspector:** View full run histories, inspect event logs, copy original prompts, and manually update status whenever needed.
+
+### 📂 4. Artifact Audit Trail & Truthful Completion
+- **Direct File Tracking:** Agents register generated files (specs, code, test reports, diagrams) as relative artifacts, clickable directly from the Run Details panel.
+- **Strict Quality Gates:** "Task completed" explicitly means the requested task finished—not that tests passed or changes were approved. SkillBento preserves human-in-the-loop approval gates.
+
+### 🔒 5. 100% Local-First & Zero Telemetry
+- All run history, prompts, and metadata are stored exclusively in local VS Code state.
+- Zero external network requests, zero telemetry, no cloud dependencies.
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- **VS Code Desktop** `1.100+`
+- A trusted workspace
+- **GitHub Copilot** with Agent mode enabled
+
+### Installation
+
+1. Clone or open the SkillBento repository, then package and install:
    ```sh
    npm ci
    npm run package
-   code --install-extension ./skillbento-0.2.1.vsix
+   code --install-extension ./skillbento-0.2.3.vsix
    ```
-2. Reload VS Code and open a repository containing skills, or its parent directory.
-3. Open **SkillBento** from the Activity Bar and select a skill.
-4. Review its purpose, select the target repository, and add a requirement URL or request if needed.
-5. Select **Open Copilot Chat**. Choose **Agent** and send the prompt if it is only prefilled.
-6. Track updates in **Runs**.
 
-A run starts only after submitting the launch form. Reference-only skills open their definitions instead.
+2. Reload VS Code and open your project workspace containing skills (e.g. `.agents/skills/` or `.github/skills/`).
 
-## Run statuses
+3. Click the **SkillBento icon** in the Activity Bar:
+   - Select any skill from the **Skills** catalog.
+   - Review its description and click **Run**.
+   - Choose the **Target Repository**, optionally enter a **Requirement URL** and additional instructions.
+   - Click **Open Copilot Chat** (Agent mode will open with your pre-engineered prompt ready to go).
+   - Track progress, evidence, and artifacts under **Runs**.
 
-- **Sent to Chat / unconfirmed:** execution is not confirmed.
-- **Running:** work was reported as started; this is not live monitoring.
-- **Blocked: evidence needed** or **Waiting for approval:** an input or human checkpoint is pending.
-- **Task completed:** completion was reported; tests or approval are not implied.
-- **Failed / Cancelled:** a terminal status was reported or set.
+---
 
-Cancelling updates local history; it does not stop Copilot or external work. Deleting a terminal run does not delete its evidence files or chat.
+## 📊 Run Lifecycle & Statuses
 
-## Skill metadata format
+SkillBento tracks each execution with clear, unambiguous states:
 
-Skills define their behavior via YAML frontmatter in `SKILL.md`. In addition to name and description, you can explicitly configure target platform, role, category, and whether the skill is user-invocable:
+| Status | Icon | Meaning |
+|---|:---:|---|
+| **Sent to Chat / unconfirmed** | ✉️ | Prompt generated and sent; execution has not been acknowledged yet. |
+| **Running** | 🔄 | Agent confirmed work started with active progress reported. |
+| **Blocked: evidence needed** | ⚠️ | Agent is blocked and requires specific input or evidence to proceed. |
+| **Waiting for approval** | 👤 | Human checkpoint reached; awaiting manual code or design approval. |
+| **Task completed** | ✅ | Requested task completed and artifacts reported (does not imply tests passed or PR merged). |
+| **Failed** | ❌ | Execution failed or terminated with errors. |
+| **Cancelled** | 🚫 | Manually marked as cancelled by the user. |
+
+---
+
+## 🛠️ Skill Specification (`SKILL.md`)
+
+SkillBento parses standard `SKILL.md` files with YAML frontmatter. You can enrich your skills with metadata for filtering and organization:
 
 ```yaml
 ---
-name: my-analysis-skill
-description: Analyze requirements and generate test specifications
-platform: all        # 'all', 'web', 'backend', 'cloud', 'ios', 'android', or any project type
-role: dev            # 'dev' | 'tester' | 'all' or any role (inferred from name if omitted)
-category: review     # 'requirements' | 'design' | 'implementation' | 'review' | 'testing' | 'workflow' | 'tools'
-user-invocable: true # set to false for reference-only skills
-argument-hint: Optional specification path or issue link
+name: api-test-generator
+description: Generate comprehensive integration tests and mocks for REST endpoints
+platform: all        # 'all', 'web', 'backend', 'cloud', 'ios', 'android', etc.
+role: tester         # 'dev' | 'tester' | 'all' (inferred if omitted)
+category: testing    # 'requirements' | 'design' | 'implementation' | 'review' | 'testing' | 'workflow' | 'tools'
+user-invocable: true # Set to false for reference-only library skills
+argument-hint: Endpoint path or OpenAPI spec file
 ---
+
+# API Test Generator
+
+Detailed workflow instructions for the AI agent...
 ```
 
-## Add skill sources
+---
 
-SkillBento discovers `.agents/skills/<name>/SKILL.md` and `.github/skills/<name>/SKILL.md` in workspace folders and their immediate child directories. To add another source, set `skillBento.skillRoots` to an absolute path:
+## ⚙️ Configuration
+
+### Adding Custom Skill Directories
+By default, SkillBento searches workspace folders and immediate child repositories. To discover skills located in external paths or central repositories:
 
 ```json
 {
-  "skillBento.skillRoots": ["/absolute/path/to/project/.agents/skills"]
+  "skillBento.skillRoots": [
+    "/Users/username/Projects/shared-ai-skills/.agents/skills"
+  ]
 }
 ```
 
-Then run **SkillBento: Refresh Skills**. Filters affect discovery, not access. The status bar dynamically reflects active runs (`$(sync~spin) SkillBento: N running` or `$(bell) SkillBento: N waiting`).
+After modifying settings, execute **SkillBento: Refresh Skills** from the command palette.
 
-## Privacy
+---
 
-Run history, prompts, requirement URLs, evidence, and paths are stored in local VS Code state and are not synced through Settings Sync. The extension sends no telemetry and does not modify project files. Copilot processes submitted prompts under its own service policies. Do not enter secrets.
+## 🤖 Language Model Tool Integration
 
-SkillBento preserves each skill's approval gates. Sending a prompt or creating an artifact does not prove the task is complete.
+SkillBento contributes the `skillBento_updateRun` language model tool (referenced as `#skillBentoUpdateRun` in Copilot Chat). When prompted by SkillBento, Copilot can call this tool natively to report progress:
 
-## Development
+```json
+{
+  "runId": "uuid-v4-from-launch-prompt",
+  "status": "running | pending_evidence | needs_approval | completed | failed | cancelled",
+  "summary": "Detailed factual progress summary",
+  "artifacts": ["src/api/service.test.ts", "coverage/summary.json"]
+}
+```
+
+If Copilot does not have tool execution enabled, users can also update statuses manually via the Run Details webview.
+
+---
+
+## 🛡️ Privacy & Security
+
+- **Strictly Local:** Run history, prompts, requirement URLs, and artifact paths remain inside VS Code's internal storage (`globalState`).
+- **No Telemetry:** SkillBento transmits zero analytics or telemetry data.
+- **Approval Preserving:** Prompts explicitly forbid agents from bypassing approval gates or declaring unwarranted success.
+
+---
+
+## 🧪 Development & Testing
 
 ```sh
+# Install dependencies
 npm ci
+
+# Run linter and core unit tests
 npm test
+
+# Run VS Code extension host integration tests
 npm run test:integration
+
+# Package VSIX
 npm run package
 ```
 
-Tests cover lint, unit/host behavior, and a separate VS Code Extension Host. Copilot sign-in and live prompt submission require manual verification.
+---
+
+## 📄 License
+
+MIT © [TADEV](https://github.com/tadev999)
