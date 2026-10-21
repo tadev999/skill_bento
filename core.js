@@ -10,10 +10,17 @@ function parseSkill(text, folderName) {
   const meta = YAML.parse(match[1]);
   if (!meta || typeof meta.name !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(meta.name) || meta.name !== folderName) throw new Error('Skill name must match its directory');
   if (typeof meta.description !== 'string' || !meta.description.trim()) throw new Error('Missing skill description');
-  const platform = /android/.test(meta.name) ? 'android' : /ios|apple|swift/.test(meta.name) ? 'ios' : 'all';
-  const role = /test|maestro/.test(meta.name) ? 'tester' : /coding|swiftui|code-review|bug-analysis|design-|merge|mr-ops|upstream|apple/.test(meta.name) ? 'dev' : 'all';
+  const platform = (typeof meta.platform === 'string' && meta.platform.trim())
+    ? meta.platform.trim().toLowerCase()
+    : (/android/.test(meta.name) ? 'android' : /ios|apple|swift/.test(meta.name) ? 'ios' : 'all');
+  const role = (typeof meta.role === 'string' && meta.role.trim())
+    ? meta.role.trim().toLowerCase()
+    : (/test|maestro/.test(meta.name) ? 'tester' : /coding|swiftui|code-review|bug-analysis|design-|merge|mr-ops|upstream|apple/.test(meta.name) ? 'dev' : 'all');
+  const category = (typeof meta.category === 'string' && meta.category.trim())
+    ? meta.category.trim().toLowerCase()
+    : undefined;
   return { name: meta.name, label: meta.name.replaceAll('-', ' '),
-    description: meta.description, platform, role,
+    description: meta.description, platform, role, category,
     invocable: meta['user-invocable'] !== false,
     hint: typeof meta['argument-hint'] === 'string' ? meta['argument-hint'] : '' };
 }
@@ -32,6 +39,7 @@ const CATEGORIES = [
 
 function categoryOf(skill) {
   if (!skill.invocable) return 'reference';
+  if (skill.category && CATEGORIES.some(item => item.id === skill.category)) return skill.category;
   if (/requirements|spec-qa|pbi/.test(skill.name)) return 'requirements';
   if (/design-|figma|layout-to/.test(skill.name)) return 'design';
   if (/test|maestro/.test(skill.name)) return 'testing';

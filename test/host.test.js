@@ -301,3 +301,45 @@ test('catalog groups each discovered skill once, counts children and supports se
   assert.equal(hub.runs.length, 0);
   mock.context.subscriptions.forEach(item => item.dispose());
 });
+
+test('runs view displays rich run details, artifacts, summaries, and history child items', async () => {
+  const mock = host();
+  const hub = await mock.activate(mock.context);
+  const core = require('../core');
+  const run = core.createRun(hub.skills[0], hub.skills[0].repo, 'https://example.com/spec', 'Fix bug');
+  const updated = core.updateRun(run, { status: 'completed', summary: 'Implemented fix successfully.', artifacts: ['dist/bundle.js'] }, 'manual');
+  await hub.mutate(() => [updated]);
+
+  // Root history items
+  const historyRoots = hub.historyChildren();
+  assert.equal(historyRoots.length, 1);
+  assert.equal(historyRoots[0].kind, 'run');
+
+  // Run tree item
+  const runItem = hub.item(historyRoots[0]);
+  assert.equal(runItem.collapsibleState, 1); // Collapsed because it has details
+  assert.match(runItem.description, /Task completed/);
+  assert.ok(runItem.tooltip);
+
+  // Child items under run
+  const children = hub.historyChildren(historyRoots[0]);
+  assert.ok(children.length >= 2);
+  const summaryChild = children.find(c => c.kind === 'run-summary');
+  const artifactChild = children.find(c => c.kind === 'run-artifact');
+  const requirementChild = children.find(c => c.kind === 'run-requirement');
+
+  assert.ok(summaryChild);
+  assert.equal(hub.item(summaryChild).description, 'Latest update');
+  assert.ok(artifactChild);
+  assert.equal(hub.item(artifactChild).label, 'bundle.js');
+  assert.equal(hub.item(artifactChild).command.command, 'vscode.open');
+  assert.ok(requirementChild);
+  assert.equal(hub.item(requirementChild).label, 'Requirement');
+
+  // Skill item tooltip and badge
+  const skillItem = hub.item({ kind: 'skill', skill: hub.skills[0] });
+  assert.match(skillItem.description, /Invocable|tester|dev/);
+  assert.ok(skillItem.tooltip);
+
+  mock.context.subscriptions.forEach(item => item.dispose());
+});

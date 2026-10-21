@@ -9,6 +9,11 @@ test('parses YAML, block descriptions and role/platform', () => {
   assert.match(skill.description, /Run tests: on iOS/);
   assert.equal(core.matches(skill, { platform: 'android', role: 'tester' }), false);
   assert.equal(core.matches(skill, { platform: 'ios', role: 'all' }), true);
+
+  const custom = core.parseSkill('---\nname: my-tool\ndescription: Custom skill\nplatform: android\nrole: dev\ncategory: tools\n---\n', 'my-tool');
+  assert.equal(custom.platform, 'android');
+  assert.equal(custom.role, 'dev');
+  assert.equal(core.categoryOf(custom), 'tools');
 });
 
 test('rejects invalid metadata and preserves non-user-invocable skills', () => {

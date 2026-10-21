@@ -40,6 +40,22 @@ A run starts only after submitting the launch form. Reference-only skills open t
 
 Cancelling updates local history; it does not stop Copilot or external work. Deleting a terminal run does not delete its evidence files or chat.
 
+## Skill metadata format
+
+Skills define their behavior via YAML frontmatter in `SKILL.md`. In addition to name and description, you can explicitly configure target platform, role, category, and whether the skill is user-invocable:
+
+```yaml
+---
+name: my-analysis-skill
+description: Analyze requirements and generate test specifications
+platform: all        # 'all', 'web', 'backend', 'cloud', 'ios', 'android', or any project type
+role: dev            # 'dev' | 'tester' | 'all' or any role (inferred from name if omitted)
+category: review     # 'requirements' | 'design' | 'implementation' | 'review' | 'testing' | 'workflow' | 'tools'
+user-invocable: true # set to false for reference-only skills
+argument-hint: Optional specification path or issue link
+---
+```
+
 ## Add skill sources
 
 SkillBento discovers `.agents/skills/<name>/SKILL.md` and `.github/skills/<name>/SKILL.md` in workspace folders and their immediate child directories. To add another source, set `skillBento.skillRoots` to an absolute path:
@@ -50,7 +66,7 @@ SkillBento discovers `.agents/skills/<name>/SKILL.md` and `.github/skills/<name>
 }
 ```
 
-Then run **SkillBento: Refresh Skills**. Filters affect discovery, not access.
+Then run **SkillBento: Refresh Skills**. Filters affect discovery, not access. The status bar dynamically reflects active runs (`$(sync~spin) SkillBento: N running` or `$(bell) SkillBento: N waiting`).
 
 ## Privacy
 

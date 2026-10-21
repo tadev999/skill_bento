@@ -3,78 +3,262 @@
   "publisher": "skillbento-local",
   "displayName": "SkillBento",
   "description": "Local SkillBento skills launcher and workflow history",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "engines": {
     "vscode": "^1.100.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": ["onStartupFinished"],
-  "capabilities": { "untrustedWorkspaces": { "supported": false } },
+  "activationEvents": [
+    "onView:skillBento.catalog",
+    "onView:skillBento.history"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false
+    }
+  },
   "main": "./hub.js",
   "contributes": {
     "commands": [
-      { "command": "skillBento.open", "title": "SkillBento: Open Skills Hub", "icon": "$(tools)" },
-      { "command": "skillBento.run", "title": "SkillBento: Run Skill", "icon": "$(play)" },
-      { "command": "skillBento.refresh", "title": "SkillBento: Refresh Skills", "icon": "$(refresh)" },
-      { "command": "skillBento.filters", "title": "SkillBento: Select Role and Platform", "icon": "$(filter)" },
-      { "command": "skillBento.search", "title": "SkillBento: Search Skills", "icon": "$(search)" },
-      { "command": "skillBento.resetFilters", "title": "SkillBento: Clear Search and Filters", "icon": "$(clear-all)" },
-      { "command": "skillBento.details", "title": "SkillBento: Open Skill Definition", "icon": "$(book)" },
-      { "command": "skillBento.update", "title": "SkillBento: Update Run Status", "icon": "$(edit)" },
-      { "command": "skillBento.result", "title": "SkillBento: Open Run Details and Results", "icon": "$(output)" },
-      { "command": "skillBento.cancelRun", "title": "SkillBento: Mark Run as Cancelled", "icon": "$(circle-slash)" },
-      { "command": "skillBento.deleteRun", "title": "SkillBento: Delete Run from History", "icon": "$(trash)" },
-      { "command": "skillBento.copy", "title": "SkillBento: Copy Run Prompt", "icon": "$(copy)" },
-      { "command": "skillBento.clear", "title": "SkillBento: Clear Local Run History" }
+      {
+        "command": "skillBento.open",
+        "title": "SkillBento: Open Skills Hub",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "skillBento.run",
+        "title": "SkillBento: Run Skill",
+        "icon": "$(play)"
+      },
+      {
+        "command": "skillBento.refresh",
+        "title": "SkillBento: Refresh Skills",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "skillBento.filters",
+        "title": "SkillBento: Select Role and Platform",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "skillBento.search",
+        "title": "SkillBento: Search Skills",
+        "icon": "$(search)"
+      },
+      {
+        "command": "skillBento.resetFilters",
+        "title": "SkillBento: Clear Search and Filters",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "skillBento.details",
+        "title": "SkillBento: Open Skill Definition",
+        "icon": "$(book)"
+      },
+      {
+        "command": "skillBento.update",
+        "title": "SkillBento: Update Run Status",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "skillBento.result",
+        "title": "SkillBento: Open Run Details and Results",
+        "icon": "$(output)"
+      },
+      {
+        "command": "skillBento.cancelRun",
+        "title": "SkillBento: Mark Run as Cancelled",
+        "icon": "$(circle-slash)"
+      },
+      {
+        "command": "skillBento.deleteRun",
+        "title": "SkillBento: Delete Run from History",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "skillBento.copy",
+        "title": "SkillBento: Copy Run Prompt",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "skillBento.clear",
+        "title": "SkillBento: Clear Local Run History",
+        "icon": "$(trash)"
+      }
     ],
-    "viewsContainers": { "activitybar": [
-      { "id": "skillBento", "title": "SkillBento", "icon": "media/skillbento.svg" }
-    ] },
-    "views": { "skillBento": [
-      { "id": "skillBento.catalog", "name": "Skills", "icon": "$(tools)" },
-      { "id": "skillBento.history", "name": "Runs", "icon": "$(history)" }
-    ] },
-    "viewsWelcome": [{ "view": "skillBento.catalog", "contents": "No matching skills.\n[Clear search and filters](command:skillBento.resetFilters)\n[Refresh](command:skillBento.refresh)\n[Configure skill roots](command:workbench.action.openSettings?%22skillBento.skillRoots%22)" }],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "skillBento",
+          "title": "SkillBento",
+          "icon": "media/skillbento.svg"
+        }
+      ]
+    },
+    "views": {
+      "skillBento": [
+        {
+          "id": "skillBento.catalog",
+          "name": "Skills",
+          "icon": "$(tools)"
+        },
+        {
+          "id": "skillBento.history",
+          "name": "Runs",
+          "icon": "$(history)"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "skillBento.catalog",
+        "contents": "No matching skills found in workspace.\n\nSkillBento discovers workflow skills defined in `.agents/skills` and `.github/skills`.\n\n[$(clear-all) Reset Filters & Search](command:skillBento.resetFilters)\n[$(refresh) Refresh Skills Catalog](command:skillBento.refresh)\n[$(gear) Configure Skill Roots](command:workbench.action.openSettings?%22skillBento.skillRoots%22)"
+      },
+      {
+        "view": "skillBento.history",
+        "contents": "No skill runs recorded yet.\n\nLaunch automated workflow skills with real-time status and artifact tracking.\n\n[$(play) Launch a Skill](command:skillBento.run)\n[$(refresh) Refresh History](command:skillBento.refresh)"
+      }
+    ],
     "menus": {
       "view/title": [
-        { "command": "skillBento.search", "when": "view == skillBento.catalog", "group": "navigation@1" },
-        { "command": "skillBento.filters", "when": "view == skillBento.catalog", "group": "navigation@2" },
-        { "command": "skillBento.run", "when": "view == skillBento.catalog", "group": "navigation@3" },
-        { "command": "skillBento.resetFilters", "when": "view == skillBento.catalog", "group": "1_catalog@1" },
-        { "command": "skillBento.refresh", "when": "view == skillBento.catalog", "group": "1_catalog@2" },
-        { "command": "skillBento.clear", "when": "view == skillBento.history" }
+        {
+          "command": "skillBento.search",
+          "when": "view == skillBento.catalog",
+          "group": "navigation@1"
+        },
+        {
+          "command": "skillBento.filters",
+          "when": "view == skillBento.catalog",
+          "group": "navigation@2"
+        },
+        {
+          "command": "skillBento.run",
+          "when": "view == skillBento.catalog",
+          "group": "navigation@3"
+        },
+        {
+          "command": "skillBento.resetFilters",
+          "when": "view == skillBento.catalog",
+          "group": "1_catalog@1"
+        },
+        {
+          "command": "skillBento.refresh",
+          "when": "view == skillBento.catalog",
+          "group": "1_catalog@2"
+        },
+        {
+          "command": "skillBento.run",
+          "when": "view == skillBento.history",
+          "group": "navigation@1"
+        },
+        {
+          "command": "skillBento.refresh",
+          "when": "view == skillBento.history",
+          "group": "navigation@2"
+        },
+        {
+          "command": "skillBento.clear",
+          "when": "view == skillBento.history",
+          "group": "1_history@1"
+        }
       ],
       "view/item/context": [
-        { "command": "skillBento.details", "when": "viewItem == skillBentoSkill", "group": "inline" },
-        { "command": "skillBento.update", "when": "viewItem == skillBentoRunActive || viewItem == skillBentoRunTerminal", "group": "inline" },
-        { "command": "skillBento.cancelRun", "when": "viewItem == skillBentoRunActive", "group": "2_run" },
-        { "command": "skillBento.deleteRun", "when": "viewItem == skillBentoRunTerminal", "group": "2_run" },
-        { "command": "skillBento.copy", "when": "viewItem == skillBentoRunActive || viewItem == skillBentoRunTerminal" }
+        {
+          "command": "skillBento.run",
+          "when": "viewItem == skillBentoSkill",
+          "group": "inline@1"
+        },
+        {
+          "command": "skillBento.details",
+          "when": "viewItem == skillBentoSkill",
+          "group": "inline@2"
+        },
+        {
+          "command": "skillBento.result",
+          "when": "viewItem == skillBentoRunActive || viewItem == skillBentoRunTerminal",
+          "group": "inline@1"
+        },
+        {
+          "command": "skillBento.update",
+          "when": "viewItem == skillBentoRunActive || viewItem == skillBentoRunTerminal",
+          "group": "inline@2"
+        },
+        {
+          "command": "skillBento.copy",
+          "when": "viewItem == skillBentoRunActive || viewItem == skillBentoRunTerminal",
+          "group": "inline@3"
+        },
+        {
+          "command": "skillBento.cancelRun",
+          "when": "viewItem == skillBentoRunActive",
+          "group": "2_run"
+        },
+        {
+          "command": "skillBento.deleteRun",
+          "when": "viewItem == skillBentoRunTerminal",
+          "group": "2_run"
+        }
       ]
     },
     "configuration": {
       "title": "SkillBento",
       "properties": {
-        "skillBento.skillRoots": { "type": "array", "items": { "type": "string" }, "default": [], "description": "Additional absolute skills-directory paths. Workspace repositories and immediate child repositories are discovered automatically." }
+        "skillBento.skillRoots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Additional absolute skills-directory paths. Workspace repositories and immediate child repositories are discovered automatically."
+        }
       }
     },
-    "languageModelTools": [{
-      "name": "skillBento_updateRun", "toolReferenceName": "skillBentoUpdateRun",
-      "displayName": "Update SkillBento Run Status", "canBeReferencedInPrompt": true,
-      "modelDescription": "Update a local SkillBento run using the exact runId supplied by the launch prompt. Report real progress, blockers, approval needs, and evidence. Completion does not mean tests passed or changes were approved.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "runId": { "type": "string" },
-          "status": { "type": "string", "enum": ["running", "pending_evidence", "needs_approval", "completed", "failed", "cancelled"] },
-          "summary": { "type": "string", "description": "Actual progress or evidence, not an inferred result." },
-          "artifacts": { "type": "array", "items": { "type": "string" }, "description": "Existing file paths relative to the run repository." }
-        },
-        "required": ["runId", "status", "summary"]
+    "languageModelTools": [
+      {
+        "name": "skillBento_updateRun",
+        "toolReferenceName": "skillBentoUpdateRun",
+        "displayName": "Update SkillBento Run Status",
+        "canBeReferencedInPrompt": true,
+        "modelDescription": "Update a local SkillBento run using the exact runId supplied by the launch prompt. Report real progress, blockers, approval needs, and evidence. Completion does not mean tests passed or changes were approved.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "runId": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "running",
+                "pending_evidence",
+                "needs_approval",
+                "completed",
+                "failed",
+                "cancelled"
+              ]
+            },
+            "summary": {
+              "type": "string",
+              "description": "Actual progress or evidence, not an inferred result."
+            },
+            "artifacts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Existing file paths relative to the run repository."
+            }
+          },
+          "required": [
+            "runId",
+            "status",
+            "summary"
+          ]
+        }
       }
-    }]
+    ]
   },
   "scripts": {
     "lint": "eslint .",
@@ -84,16 +268,18 @@
     "package": "vsce package --allow-missing-repository --skip-license"
   },
   "devDependencies": {
-    "@types/vscode": "1.100.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "24.x",
-    "eslint": "^10.5.0",
-    "globals": "^16.0.0",
-    "@vscode/vsce": "^4.0.0",
+    "@types/vscode": "1.100.0",
     "@vscode/test-cli": "^0.0.15",
-    "@vscode/test-electron": "^3.0.0"
+    "@vscode/test-electron": "^3.0.0",
+    "@vscode/vsce": "^3.9.2",
+    "eslint": "^10.5.0",
+    "globals": "^16.0.0"
   },
-  "dependencies": { "yaml": "^2.8.0" },
+  "dependencies": {
+    "yaml": "^2.8.0"
+  },
   "overrides": {
     "diff": "^8.0.4",
     "serialize-javascript": "^7.0.6"
