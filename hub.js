@@ -457,19 +457,6 @@ h1 {
 }
 .badge-accent { background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.3); color: var(--vscode-textLink-foreground, #38bdf8); }
 .meta { color: var(--vscode-descriptionForeground); font-size: 12.5px; line-height: 1.7; margin: 8px 0; }
-.note {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px 18px;
-  background: rgba(234, 179, 8, 0.08);
-  border: 1px solid rgba(234, 179, 8, 0.25);
-  border-radius: 8px;
-  color: var(--vscode-editorWarning-foreground, #eab308);
-  font-size: 13px;
-  line-height: 1.68;
-  margin: 0;
-}
 form { display: grid; gap: 20px; }
 .bento-card {
   background: var(--bento-card-bg);
@@ -588,11 +575,6 @@ button.secondary:hover {
   </div>
   <p class="meta" style="display:none;">Platform: ${escapeHtml(skill.platform)} | Role: ${escapeHtml(skill.role)}</p>
 </section>
-
-<div class="note">
-  <span>&#9888;</span>
-  <div>Submitting opens Copilot Chat with a prepared prompt. It does not confirm execution or bypass the skill's approval gates.</div>
-</div>
 
 <form id="launch-form">
   <div class="bento-card">

@@ -3,7 +3,7 @@
   "publisher": "skillbento-local",
   "displayName": "SkillBento",
   "description": "Local SkillBento skills launcher and workflow history",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "engines": {
     "vscode": "^1.100.0"
   },

@@ -127,7 +127,6 @@ test('clicking a skill opens its in-editor form directly with purpose and option
   assert.equal(panel.options.enableScripts, true);
   assert.ok(panel.webview.html.includes(skill.description));
   assert.ok(panel.webview.html.includes(`Platform: ${skill.platform} | Role: ${skill.role}`));
-  assert.match(panel.webview.html, /does not confirm execution or bypass the skill's approval gates/);
   assert.match(panel.webview.html, /Target repository/);
   assert.match(panel.webview.html, /Requirement URL <span>Optional/);
   assert.match(panel.webview.html, /Request, input file, or diff <span>Optional/);
