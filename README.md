@@ -24,7 +24,7 @@
 │ Centralized Hub  │ ───> │ Guarded Launch   │ ───> │ Real-Time Run    │
 │ & Bento Catalog  │      │ Form with Scope  │      │ Tracker & Tools  │
 └──────────────────┘      └──────────────────┘      └──────────────────┘
- • Auto-scanned skills     • Sandboxed target repo   • Live status in statusbar
+ • Auto-scanned skills     • Skill-guided launch      • Live status in statusbar
  • Filter by role/category • Validated Jira/PR URL   • Copilot tool integration
  • 1-click spec preview    • Pre-engineered prompt   • Clickable artifact trail
 ```
@@ -38,12 +38,12 @@
 ```sh
 # Build and install extension
 npm ci && npm run package
-code --install-extension ./skillbento-0.2.3.vsix
+code --install-extension ./skill-bento-0.2.3.vsix
 ```
 
 1. Open **SkillBento** from the Activity Bar.
 2. Select a skill → click **Run**.
-3. Choose the **Target Repository**, add an optional **Requirement URL**, and click **Open Copilot Chat**.
+3. Add an optional **Requirement URL** or request, then click **Open Copilot Chat**.
 4. Track live progress, blockers, and artifacts in **Runs**.
 
 ---
@@ -72,7 +72,7 @@ Add external or centralized skill directories via `.vscode/settings.json`:
 
 ```json
 {
-  "skillBento.skillRoots": ["/path/to/shared/.agents/skills"]
+  "skillbento.skillRoots": ["/path/to/shared/.agents/skills"]
 }
 ```
 
@@ -82,7 +82,7 @@ Add external or centralized skill directories via `.vscode/settings.json`:
 
 `sent` ➔ `running` ➔ `pending_evidence` | `needs_approval` ➔ `completed` | `failed` | `cancelled`
 
-- **Language Model Tool:** Agents update status and report output files natively using `#skillBentoUpdateRun`:
+- **Language Model Tool:** Agents update status and report output files natively using `#skillbentoUpdateRun`:
   ```json
   {
     "runId": "uuid-from-launch-prompt",

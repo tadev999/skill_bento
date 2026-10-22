@@ -107,15 +107,15 @@ function host() {
 
 test('clicking a skill opens its in-editor form directly with purpose and optional requirementUrl and request', async () => {
   const manifest = require('../package.json');
-  assert.equal(manifest.contributes.views.skillBento.some(view => view.id === 'skillBento.details'), false);
+  assert.equal(manifest.contributes.views.skillbento.some(view => view.id === 'skillbento.details'), false);
   const mock = host();
   const hub = await mock.activate(mock.context);
   assert.ok(hub.skills.length > 5);
-  assert.ok(mock.views.has('skillBento.history'));
+  assert.ok(mock.views.has('skillbento.history'));
   const skill = hub.skills.find(item => item.name === 'test-item-generation');
   assert.equal(mock.detailProviders.size, 0);
   const item = hub.item({ kind: 'skill', skill });
-  assert.equal(item.command.command, 'skillBento.run');
+  assert.equal(item.command.command, 'skillbento.run');
   const launchPromise = mock.commands.get(item.command.command)(...item.command.arguments);
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(mock.messages.length, 0);
@@ -127,23 +127,28 @@ test('clicking a skill opens its in-editor form directly with purpose and option
   assert.equal(panel.options.enableScripts, true);
   assert.ok(panel.webview.html.includes(skill.description));
   assert.ok(panel.webview.html.includes(`Platform: ${skill.platform} | Role: ${skill.role}`));
-  assert.match(panel.webview.html, /Target repository/);
+  assert.doesNotMatch(panel.webview.html, /Target Repository|Project folders|Work folder|Reference only|folderRole/);
   assert.match(panel.webview.html, /Requirement URL <span>Optional/);
   assert.match(panel.webview.html, /Request, input file, or diff <span>Optional/);
   assert.doesNotMatch(panel.webview.html, /id="request"[^>]*required/);
-  await panel.receive({ type: 'launch', repo: skill.repo, requirementUrl: 'not-a-url', request: '' });
+  await panel.receive({ type: 'launch', requirementUrl: 'not-a-url', request: '' });
   assert.equal(hub.runs.length, 0);
   assert.match(panel.messages.at(-1).message, /valid HTTP or HTTPS/);
-  await panel.receive({ type: 'launch', repo: skill.repo, requirementUrl: ' https://example.com/requirements/42 ', request: '' });
+  await panel.receive({ type: 'launch', requirementUrl: ' https://example.com/requirements/42 ', request: '' });
   await launchPromise;
   assert.equal(hub.runs.length, 1);
+  assert.equal(hub.runs[0].repo, skill.repo);
+  assert.equal(Object.hasOwn(hub.runs[0], 'folders'), false);
   assert.equal(hub.runs[0].status, 'sent');
   assert.equal(hub.runs[0].requirementUrl, 'https://example.com/requirements/42');
   assert.equal(hub.runs[0].input, '');
   const openedChat = mock.sent.find(([command]) => command === 'workbench.action.chat.open');
   assert.ok(openedChat[1].query.includes('https://example.com/requirements/42'));
+  assert.doesNotMatch(openedChat[1].query, /Target repository|Project folders|Work folder|Reference folder/);
+  assert.equal((openedChat[1].query.match(/Execute the test-item-generation skill/g) || []).length, 1);
+  assert.ok(openedChat[1].query.includes(`Local SkillBento runId: ${hub.runs[0].id}`));
   assert.match(openedChat[1].query, /follow the selected skill's default workflow/);
-  const tool = mock.tools.get('skillBento_updateRun');
+  const tool = mock.tools.get('skillbento_updateRun');
   await tool.invoke({ input: { runId: hub.runs[0].id, status: 'pending_evidence', summary: 'Need device matrix' } });
   assert.equal(hub.runs[0].status, 'pending_evidence');
   assert.equal(mock.context.globalState.get('runs')[0].events[0].source, 'copilot-tool');
@@ -158,13 +163,13 @@ test('Run Skill picker opens the selected skill form directly without a confirma
   const mock = host();
   const hub = await mock.activate(mock.context);
   mock.picks.push(0);
-  const launchPromise = mock.commands.get('skillBento.run')();
+  const launchPromise = mock.commands.get('skillbento.run')();
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(mock.messages.length, 0);
   assert.equal(mock.picks.length, 0);
   assert.equal(hub.runs.length, 0);
   assert.equal(mock.launchPanels.length, 1);
-  mock.launchPanels[0].receive({ type: 'launch', repo: hub.skills.find(skill => skill.invocable).repo, requirementUrl: '', request: '' });
+  mock.launchPanels[0].receive({ type: 'launch', requirementUrl: '', request: '' });
   await launchPromise;
   assert.equal(hub.runs.length, 1);
   mock.context.subscriptions.forEach(item => item.dispose());
@@ -210,12 +215,12 @@ test('clicking a run opens readable details and lets the user mark it cancelled'
   await hub.mutate(() => [blocked]);
   const element = { kind: 'run', run: blocked };
   const item = hub.item(element);
-  assert.equal(item.contextValue, 'skillBentoRunActive');
+  assert.equal(item.contextValue, 'skillbentoRunActive');
   assert.match(item.description, /Blocked: evidence needed/);
   await mock.commands.get(item.command.command)(...item.command.arguments);
   const panel = mock.launchPanels.at(-1);
   assert.ok(panel);
-  assert.equal(panel.viewType, 'skillBento.runDetails');
+  assert.equal(panel.viewType, 'skillbento.runDetails');
   for (const text of ['https://example.com/requirements/1', 'test-item-generation', '/repo', 'Generate cases', 'Waiting for the linked specification.', 'docs/evidence.md', 'Status history', 'Mark as cancelled']) {
     assert.ok(panel.webview.html.includes(text), `missing run detail: ${text}`);
   }
@@ -223,7 +228,7 @@ test('clicking a run opens readable details and lets the user mark it cancelled'
   assert.equal(hub.runs[0].status, 'cancelled');
   assert.match(panel.webview.html, /Cancelled/);
   assert.match(panel.webview.html, /external work are not stopped/);
-  assert.equal(hub.item({ kind: 'run', run: hub.runs[0] }).contextValue, 'skillBentoRunTerminal');
+  assert.equal(hub.item({ kind: 'run', run: hub.runs[0] }).contextValue, 'skillbentoRunTerminal');
   mock.context.subscriptions.forEach(item => item.dispose());
 });
 
@@ -238,7 +243,7 @@ test('only terminal runs can be deleted and confirmation removes history but not
   await hub.mutate(() => [cancelled]);
   mock.answers.push('Delete');
   const item = hub.item({ kind: 'run', run: cancelled });
-  assert.equal(item.contextValue, 'skillBentoRunTerminal');
+  assert.equal(item.contextValue, 'skillbentoRunTerminal');
   await mock.commands.get(item.command.command)(...item.command.arguments);
   const panel = mock.launchPanels.at(-1);
   assert.ok(panel.webview.html.includes('Delete from history'));
@@ -252,9 +257,9 @@ test('visible status-bar button opens the dedicated sidebar without running a sk
   const mock = host();
   const hub = await mock.activate(mock.context);
   assert.equal(mock.statusEntries[0].visible, true);
-  assert.equal(mock.statusEntries[0].command, 'skillBento.open');
-  await mock.commands.get('skillBento.open')();
-  assert.equal(mock.sent[0][0], 'workbench.view.extension.skillBento');
+  assert.equal(mock.statusEntries[0].command, 'skillbento.open');
+  await mock.commands.get('skillbento.open')();
+  assert.equal(mock.sent[0][0], 'workbench.view.extension.skillbento');
   assert.equal(hub.runs.length, 0);
   mock.context.subscriptions.forEach(item => item.dispose());
 });
@@ -278,7 +283,7 @@ test('catalog groups each discovered skill once, counts children and supports se
   assert.equal(core.categoryOf(hub.skills.find(skill => skill.name === 'test-item-review')), 'testing');
   assert.ok(core.catalogSkills(hub.skills, hub.filters, 'IOS CODING').some(skill => skill.name === 'ios-coding'));
   mock.inputs.push('IOS-CODING');
-  await mock.commands.get('skillBento.search')();
+  await mock.commands.get('skillbento.search')();
   const found = hub.catalogChildren();
   assert.equal(found.length, 1);
   assert.equal(hub.item(found[0]).collapsibleState, 2);
@@ -292,7 +297,7 @@ test('catalog groups each discovered skill once, counts children and supports se
   assert.equal(hub.catalogChildren().length, 0);
   hub.updateCatalogSummary();
   assert.match(hub.catalogView.message, /No matching skills/);
-  await mock.commands.get('skillBento.resetFilters')();
+  await mock.commands.get('skillbento.resetFilters')();
   assert.equal(hub.query, '');
   assert.equal(hub.filters.platform, 'all');
   assert.equal(hub.catalogChildren().length, groups.length);

@@ -147,7 +147,7 @@ class Hub {
       roots.add(path.join(repo, '.agents', 'skills'));
       roots.add(path.join(repo, '.github', 'skills'));
     }
-    for (const root of vscode.workspace.getConfiguration('skillBento').get('skillRoots', [])) {
+    for (const root of vscode.workspace.getConfiguration('skillbento').get('skillRoots', [])) {
       if (path.isAbsolute(root)) roots.add(root);
       else this.output.appendLine(`Skipped non-absolute skill root: ${root}`);
     }
@@ -213,7 +213,7 @@ class Hub {
       item.id = `category:${element.category.id}${this.query ? `:search:${this.query}` : ''}`;
       item.description = `${element.count} ${element.count === 1 ? 'skill' : 'skills'}`;
       item.iconPath = new vscode.ThemeIcon(element.category.icon, createThemeColor(CATEGORY_COLORS[element.category.id]));
-      item.contextValue = 'skillBentoCategory';
+      item.contextValue = 'skillbentoCategory';
       item.tooltip = createMarkdown(
         `### $(${element.category.icon}) **${element.category.label}**\n\n` +
         `**${element.count}** skill${element.count > 1 ? 's' : ''} available in the active workspace.\n\n` +
@@ -260,12 +260,12 @@ class Hub {
         '',
         '---',
         skill.invocable
-          ? `[$(play) **Run Skill**](command:skillBento.run) &nbsp;&nbsp;|&nbsp;&nbsp; [$(file-code) Open Definition](command:skillBento.details)`
-          : `[$(file-code) Open SKILL.md](command:skillBento.details)`
+          ? `[$(play) **Run Skill**](command:skillbento.run) &nbsp;&nbsp;|&nbsp;&nbsp; [$(file-code) Open Definition](command:skillbento.details)`
+          : `[$(file-code) Open SKILL.md](command:skillbento.details)`
       ];
       item.tooltip = createMarkdown(tipLines.filter(Boolean).join('\n'));
-      item.contextValue = 'skillBentoSkill';
-      item.command = { command: 'skillBento.run', title: 'Review Skill', arguments: [element] };
+      item.contextValue = 'skillbentoSkill';
+      item.command = { command: 'skillbento.run', title: 'Review Skill', arguments: [element] };
       return item;
     }
     if (element.kind === 'run') {
@@ -275,8 +275,8 @@ class Hub {
       item.id = run.id;
       item.description = `${STATUS[run.status][0]} • ${path.basename(run.repo)}`;
       item.iconPath = new vscode.ThemeIcon(STATUS[run.status][1], createThemeColor(STATUS_COLORS[run.status]));
-      item.contextValue = ['completed', 'failed', 'cancelled'].includes(run.status) ? 'skillBentoRunTerminal' : 'skillBentoRunActive';
-      item.command = { command: 'skillBento.result', title: 'Run Details', arguments: [element] };
+      item.contextValue = ['completed', 'failed', 'cancelled'].includes(run.status) ? 'skillbentoRunTerminal' : 'skillbentoRunActive';
+      item.command = { command: 'skillbento.result', title: 'Run Details', arguments: [element] };
 
       const tipLines = [
         `### $(${STATUS[run.status][1]}) **${run.skill}** &nbsp; \`${STATUS[run.status][0]}\``,
@@ -294,7 +294,7 @@ class Hub {
           : `- **Artifacts:** _None reported_`,
         '',
         '---',
-        `[$(output) View Details & Results](command:skillBento.result) &nbsp;&nbsp;|&nbsp;&nbsp; [$(copy) Copy Prompt](command:skillBento.copy)`
+        `[$(output) View Details & Results](command:skillbento.result) &nbsp;&nbsp;|&nbsp;&nbsp; [$(copy) Copy Prompt](command:skillbento.copy)`
       ];
       item.tooltip = createMarkdown(tipLines.filter(Boolean).join('\n'));
       return item;
@@ -306,8 +306,8 @@ class Hub {
       item.description = 'Latest update';
       item.iconPath = new vscode.ThemeIcon('comment-discussion', createThemeColor('charts.blue'));
       item.tooltip = createMarkdown(`**Latest Progress Update:**\n\n> ${escapeMarkdown(element.run.summary)}`);
-      item.command = { command: 'skillBento.result', title: 'Run Details', arguments: [{ kind: 'run', run: element.run }] };
-      item.contextValue = 'skillBentoRunSummary';
+      item.command = { command: 'skillbento.result', title: 'Run Details', arguments: [{ kind: 'run', run: element.run }] };
+      item.contextValue = 'skillbentoRunSummary';
       return item;
     }
     if (element.kind === 'run-artifact') {
@@ -321,7 +321,7 @@ class Hub {
         title: 'Open Artifact',
         arguments: [vscode.Uri.file(path.resolve(element.run.repo, element.artifact))]
       };
-      item.contextValue = 'skillBentoArtifact';
+      item.contextValue = 'skillbentoArtifact';
       return item;
     }
     if (element.kind === 'run-requirement') {
@@ -334,7 +334,7 @@ class Hub {
         title: 'Open Requirement',
         arguments: [vscode.Uri.parse ? vscode.Uri.parse(element.run.requirementUrl) : vscode.Uri.file(element.run.requirementUrl)]
       };
-      item.contextValue = 'skillBentoRequirement';
+      item.contextValue = 'skillbentoRequirement';
       return item;
     }
     return new vscode.TreeItem('');
@@ -366,9 +366,8 @@ class Hub {
     await this.context.globalState.update('filters', this.filters);
     this.changed.fire();
   }
-  /** @param {{ label: string, description: string, hint: string, platform: string, role: string }} skill @param {string[]} candidates @param {string} nonce */
-  launchFormHtml(skill, candidates, nonce) {
-    const options = candidates.map(repo => `<option value="${escapeHtml(repo)}">${escapeHtml(path.basename(repo))} &mdash; ${escapeHtml(repo)}</option>`).join('');
+  /** @param {{ label: string, description: string, hint: string, platform: string, role: string }} skill @param {string} nonce */
+  launchFormHtml(skill, nonce) {
     const hint = skill.hint ? `<div class="bento-hint"><span class="hint-icon">&#9432;</span><span>Skill input hint: ${escapeHtml(skill.hint)}</span></div>` : '';
     return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -578,13 +577,6 @@ button.secondary:hover {
 
 <form id="launch-form">
   <div class="bento-card">
-    <label for="repo">Target repository
-      <span>Select which workspace or repository this skill will analyze or modify</span>
-      <select id="repo" required>${options}</select>
-    </label>
-  </div>
-
-  <div class="bento-card">
     <label for="requirementUrl">Requirement URL <span>Optional; HTTP or HTTPS link to the request</span>
       <input id="requirementUrl" type="url" pattern="https?://.*" placeholder="https://example.com/requirements/42">
     </label>
@@ -610,7 +602,8 @@ button.secondary:hover {
 const vscode = acquireVsCodeApi();
 document.getElementById('launch-form').addEventListener('submit', event => {
   event.preventDefault();
-  vscode.postMessage({ type: 'launch', repo: document.getElementById('repo').value, requirementUrl: document.getElementById('requirementUrl').value, request: document.getElementById('request').value });
+  document.getElementById('error').textContent = '';
+  vscode.postMessage({ type: 'launch', requirementUrl: document.getElementById('requirementUrl').value, request: document.getElementById('request').value });
 });
 document.getElementById('cancel').addEventListener('click', () => vscode.postMessage({ type: 'cancel' }));
 window.addEventListener('keydown', event => { if (event.key === 'Escape') vscode.postMessage({ type: 'cancel' }); });
@@ -618,14 +611,14 @@ window.addEventListener('message', event => { if (event.data.type === 'error') d
 </script></body></html>`;
   }
 
-  /** @param {{ name: string, label: string, description: string, hint: string, platform: string }} skill @param {string[]} candidates */
-  async showLaunchForm(skill, candidates) {
+  /** @param {{ name: string, label: string, description: string, hint: string, platform: string }} skill */
+  async showLaunchForm(skill) {
     const nonce = randomBytes(16).toString('base64');
-    const panel = vscode.window.createWebviewPanel('skillBento.launch', `Launch ${skill.label}`, vscode.ViewColumn.Active, { enableScripts: true });
-    panel.webview.html = this.launchFormHtml(skill, candidates, nonce);
+    const panel = vscode.window.createWebviewPanel('skillbento.launch', `Launch ${skill.label}`, vscode.ViewColumn.Active, { enableScripts: true });
+    panel.webview.html = this.launchFormHtml(skill, nonce);
     return new Promise(resolve => {
       let settled = false;
-      /** @param {{ skill: object, repo: string, requirementUrl: string, request: string } | undefined} value */
+      /** @param {{ skill: object, requirementUrl: string, request: string } | undefined} value */
       const finish = value => {
         if (settled) return;
         settled = true;
@@ -638,18 +631,13 @@ window.addEventListener('message', event => { if (event.data.type === 'error') d
           return;
         }
         if (message?.type !== 'launch') return;
-        if (typeof message.repo !== 'string' || !candidates.includes(message.repo)) {
-          await panel.webview.postMessage({ type: 'error', message: 'Select a repository from the list.' });
-          return;
-        }
         let requirementUrl;
         try { requirementUrl = core.validateRequirementUrl(message.requirementUrl === undefined ? '' : message.requirementUrl); }
         catch (error) {
           await panel.webview.postMessage({ type: 'error', message: error.message });
           return;
         }
-        const selectedSkill = this.skills.find(item => item.name === skill.name && item.repo === message.repo) || skill;
-        finish({ skill: selectedSkill, repo: message.repo,
+        finish({ skill,
           requirementUrl,
           request: typeof message.request === 'string' ? message.request.trim() : '' });
         panel.dispose();
@@ -685,13 +673,11 @@ window.addEventListener('message', event => { if (event.data.type === 'error') d
     }
     if (!skill) return;
     if (!skill.invocable) {
-      return vscode.commands.executeCommand('skillBento.details', { skill });
+      return vscode.commands.executeCommand('skillbento.details', { skill });
     }
-    const candidates = [...new Set([...this.repos, ...(vscode.workspace.workspaceFolders || []).filter(folder => folder.uri.scheme === 'file' && !this.repos.some(repo => core.isWithin(folder.uri.fsPath, repo))).map(folder => folder.uri.fsPath)])];
-    if (!candidates.length) throw new Error('No local repository is available as a target');
-    const form = await this.showLaunchForm(skill, candidates);
+    const form = await this.showLaunchForm(skill);
     if (!form) return;
-    const run = core.createRun(form.skill, form.repo, form.requirementUrl, form.request);
+    const run = core.createRun(form.skill, form.skill.repo, form.requirementUrl, form.request);
     await this.mutate(runs => [run, ...runs]);
     const prompt = core.buildPrompt(run);
     try {
@@ -747,7 +733,7 @@ window.addEventListener('message', event => { if (event.data.type === 'error') d
     if (!selected) return;
     const summary = await vscode.window.showInputBox({ title: 'SkillBento: Actual result / evidence / reason', value: run.summary, validateInput: value => value.trim() ? undefined : 'A factual note is required' });
     if (summary === undefined) return;
-    const artifact = await vscode.window.showInputBox({ title: 'SkillBento: Result file relative to repository (optional)', placeHolder: 'docs/test/integration/result.html' });
+    const artifact = await vscode.window.showInputBox({ title: 'SkillBento: Result file relative to the skill repository (optional)', placeHolder: 'docs/test/integration/result.html' });
     if (artifact === undefined) return;
     const artifacts = artifact.trim() ? [...new Set([...run.artifacts, artifact.trim()])] : run.artifacts;
     for (const file of artifacts) await this.safeArtifact(run, file);
@@ -1007,7 +993,7 @@ button.danger:hover {
 </section>
 
 <section class="grid">
-  <div class="field"><strong>Repository</strong>${escapeHtml(run.repo)}</div>
+  <div class="field"><strong>Skill repository</strong>${escapeHtml(run.repo)}</div>
   <div class="field"><strong>Requirement URL</strong>${escapeHtml(run.requirementUrl || 'Not supplied')}</div>
   <div class="field"><strong>Created</strong>${escapeHtml(run.createdAt)}</div>
   <div class="field"><strong>Last updated</strong>${escapeHtml(run.updatedAt)}</div>
@@ -1082,7 +1068,7 @@ window.addEventListener('message', event => { if (event.data.type === 'error') d
     const run = await this.chooseRun(element);
     if (!run) return;
     const nonce = randomBytes(16).toString('base64');
-    const panel = vscode.window.createWebviewPanel('skillBento.runDetails', `Run: ${run.requirementUrl || run.skill}`, vscode.ViewColumn.Active, { enableScripts: true });
+    const panel = vscode.window.createWebviewPanel('skillbento.runDetails', `Run: ${run.requirementUrl || run.skill}`, vscode.ViewColumn.Active, { enableScripts: true });
     panel.webview.html = this.runDetailsHtml(run, nonce);
     panel.webview.onDidReceiveMessage(async message => {
       try {
@@ -1099,20 +1085,19 @@ window.addEventListener('message', event => { if (event.data.type === 'error') d
   }
 
   async safeArtifact(run, artifact) {
-    if (!core.isWithin(run.repo, artifact) || path.isAbsolute(artifact)) throw new Error('Artifact is outside the repository or not relative');
-    let root, file;
-    try {
-      root = await fs.realpath(run.repo);
-      file = await fs.realpath(path.resolve(run.repo, artifact));
-    } catch {
-      throw new Error('Artifact must be an existing file inside the repository');
-    }
-    if (!core.isWithin(root, file)) throw new Error('Artifact must be an existing file inside the repository');
+    if (!core.isWithinRepo(run, artifact)) throw new Error('Artifact is outside the run repository or not relative');
+    let file;
+    try { file = await fs.realpath(path.resolve(run.repo, artifact)); }
+    catch { throw new Error('Artifact must be an existing file inside the run repository'); }
+    let root;
+    try { root = await fs.realpath(run.repo); }
+    catch { throw new Error('Run repository is unavailable'); }
+    if (!core.isWithin(root, file)) throw new Error('Artifact must be an existing file inside the run repository');
     try {
       const stat = await fs.stat(file);
-      if (!stat.isFile()) throw new Error('Artifact must be an existing file inside the repository');
+      if (!stat.isFile()) throw new Error('Artifact must be an existing file inside the run repository');
     } catch {
-      throw new Error('Artifact must be an existing file inside the repository');
+      throw new Error('Artifact must be an existing file inside the run repository');
     }
     return file;
   }
@@ -1120,15 +1105,15 @@ window.addEventListener('message', event => { if (event.data.type === 'error') d
 
 async function activate(context) {
   const hub = new Hub(context);
-  const register = (name, action) => context.subscriptions.push(vscode.commands.registerCommand(`skillBento.${name}`, async (...args) => {
+  const register = (name, action) => context.subscriptions.push(vscode.commands.registerCommand(`skillbento.${name}`, async (...args) => {
     try { return await action(...args); }
     catch (error) { hub.output.appendLine(error.stack || error.message); vscode.window.showErrorMessage(`SkillBento: ${error.message}`); }
   }));
-  register('open', () => vscode.commands.executeCommand('workbench.view.extension.skillBento'));
+  register('open', () => vscode.commands.executeCommand('workbench.view.extension.skillbento'));
   const entry = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 50);
   entry.text = '$(tools) SkillBento';
   entry.tooltip = 'Open SkillBento';
-  entry.command = 'skillBento.open';
+  entry.command = 'skillbento.open';
   entry.show();
   context.subscriptions.push(entry);
   hub.statusBarItem = entry;
@@ -1156,15 +1141,15 @@ async function activate(context) {
     const answer = await vscode.window.showWarningMessage('Clear local SkillBento history? Result files will not be deleted.', { modal: true }, 'Clear');
     if (answer === 'Clear') await hub.mutate(() => []);
   });
-  hub.catalogView = vscode.window.createTreeView('skillBento.catalog', { showCollapseAll: true, treeDataProvider: {
+  hub.catalogView = vscode.window.createTreeView('skillbento.catalog', { showCollapseAll: true, treeDataProvider: {
     onDidChangeTreeData: hub.changed.event, getChildren: element => hub.catalogChildren(element), getTreeItem: element => hub.item(element)
   } });
   context.subscriptions.push(hub.catalogView, hub.changed.event(() => hub.updateCatalogSummary()));
-  hub.historyView = vscode.window.createTreeView('skillBento.history', { treeDataProvider: {
+  hub.historyView = vscode.window.createTreeView('skillbento.history', { treeDataProvider: {
     onDidChangeTreeData: hub.historyChanged.event, getChildren: element => hub.historyChildren(element), getTreeItem: element => hub.item(element)
   } });
   context.subscriptions.push(hub.historyView);
-  context.subscriptions.push(vscode.lm.registerTool('skillBento_updateRun', {
+  context.subscriptions.push(vscode.lm.registerTool('skillbento_updateRun', {
     prepareInvocation: options => ({ invocationMessage: `SkillBento ${options.input.runId}: ${options.input.status}` }),
     invoke: async options => {
       const input = options.input;
@@ -1177,7 +1162,7 @@ async function activate(context) {
   }));
   context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => hub.refresh().catch(error => hub.output.appendLine(error.message))));
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(event => {
-    if (event.affectsConfiguration('skillBento')) hub.refresh().catch(error => hub.output.appendLine(error.message));
+    if (event.affectsConfiguration('skillbento')) hub.refresh().catch(error => hub.output.appendLine(error.message));
   }));
   const watcher = vscode.workspace.createFileSystemWatcher('**/{.agents,.github}/skills/**/SKILL.md');
   let timer;

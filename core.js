@@ -75,7 +75,9 @@ function validateRequirementUrl(value) {
 
 function createRun(skill, repo, requirementUrl, input) {
   const now = new Date().toISOString();
-  return { id: randomUUID(), skill: skill.name, skillPath: skill.file, repo, requirementUrl: validateRequirementUrl(requirementUrl), input,
+  const root = path.resolve(repo);
+  return { id: randomUUID(), skill: skill.name, skillPath: skill.file, repo: root,
+    requirementUrl: validateRequirementUrl(requirementUrl), input,
     status: 'sent', summary: 'Prepared for Copilot; execution not confirmed.', artifacts: [],
     createdAt: now, updatedAt: now, events: [] };
 }
@@ -85,7 +87,7 @@ function updateRun(run, change, source) {
   if (typeof change.summary !== 'string' || !change.summary.trim()) throw new Error('A progress/evidence summary is required');
   if (change.summary.length > 12000) throw new Error('Summary exceeds 12000 characters');
   const artifacts = change.artifacts === undefined ? run.artifacts : change.artifacts;
-  if (!Array.isArray(artifacts) || artifacts.some(item => typeof item !== 'string' || !isWithin(run.repo, item))) throw new Error('Artifacts must be files inside the run repository');
+  if (!Array.isArray(artifacts) || artifacts.some(item => !isWithinRepo(run, item))) throw new Error('Artifacts must be files inside the run repository');
   const now = new Date().toISOString();
   return { ...run, status: change.status, summary: change.summary.trim(), artifacts,
     updatedAt: now, events: [...run.events, { at: now, status: change.status, summary: change.summary.trim(), source }].slice(-100) };
@@ -96,18 +98,19 @@ function isWithin(root, file) {
   return relative !== '' && relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
 }
 
+function isWithinRepo(run, file) {
+  return typeof file === 'string' && !path.isAbsolute(file) && isWithin(run.repo, file);
+}
+
 function buildPrompt(run) {
   return [
-    `Use the skill ${run.skill}. Read the full skill file at ${run.skillPath} and its required references.`,
-    `Target repository: ${run.repo}. Work only in this repository unless explicitly authorized.`,
+    `Execute the ${run.skill} skill. Read its full definition at ${run.skillPath} and the references it uses.`,
     run.requirementUrl ? `Requirement URL: ${run.requirementUrl}` : '',
     run.input ? `User request:\n${run.input}` : "No additional request was supplied; follow the selected skill's default workflow.",
     `Local SkillBento runId: ${run.id}.`,
-    'If available, use #skillBentoUpdateRun (registered tool skillBento_updateRun) with this exact runId to report running, pending_evidence, needs_approval, completed, failed, or cancelled.',
-    'If the status tool is unavailable, report that in chat; the user can update the run manually. Do not create status files as a substitute.',
-    'Include a factual summary and repository-relative existing artifact paths. Completed means this requested task finished, NOT that tests passed, DoD was met, or approval was granted.',
-    'Preserve skill approval gates. Never infer success from sending the prompt or creating an artifact. Stop and report missing evidence when required.'
+    'If available, use #skillbentoUpdateRun (registered tool skillbento_updateRun) with this runId to report progress and the result.',
+    'If the status tool is unavailable, report the result in chat.'
   ].filter(Boolean).join('\n\n');
 }
 
-module.exports = { STATUSES, CATEGORIES, categoryOf, catalogSkills, parseSkill, matches, createRun, updateRun, isWithin, buildPrompt, validateRequirementUrl };
+module.exports = { STATUSES, CATEGORIES, categoryOf, catalogSkills, parseSkill, matches, createRun, updateRun, isWithin, isWithinRepo, buildPrompt, validateRequirementUrl };

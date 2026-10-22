@@ -26,12 +26,36 @@ test('runs begin unconfirmed and prompts preserve evidence and approvals', () =>
   const run = core.createRun({ name: 'test-item-generation', file: '/skills/SKILL.md' }, '/repo', 'https://example.com/requirements/1', 'Create tests');
   assert.equal(run.status, 'sent');
   const prompt = core.buildPrompt(run);
-  for (const text of [run.id, '/repo', '/skills/SKILL.md', 'https://example.com/requirements/1', 'approval', '#skillBentoUpdateRun']) assert.ok(prompt.includes(text));
+  for (const text of [run.id, '/skills/SKILL.md', 'https://example.com/requirements/1', '#skillbentoUpdateRun']) assert.ok(prompt.includes(text));
+  assert.doesNotMatch(prompt, /Target repository: \/repo/);
+  assert.doesNotMatch(prompt, /approval gates|tests passed|DoD/);
   assert.throws(() => core.updateRun(run, { status: 'completed', summary: '' }, 'manual'));
   const next = core.updateRun(run, { status: 'pending_evidence', summary: 'requirements service not accessible' }, 'copilot-tool');
   assert.equal(run.status, 'sent');
   assert.equal(next.events[0].source, 'copilot-tool');
   assert.equal(next.status, 'pending_evidence');
+});
+
+test('runs keep repository metadata out of the skill prompt', () => {
+  const skill = { name: 'test-item-generation', file: '/skills/SKILL.md' };
+  const run = core.createRun(skill, '/project/code', '', 'Update the service');
+  const prompt = core.buildPrompt(run);
+  assert.equal(run.repo, '/project/code');
+  assert.equal(Object.hasOwn(run, 'folders'), false);
+  assert.doesNotMatch(prompt, /Target repository|Project folders|Work folder|Reference folder/);
+  assert.equal(core.isWithinRepo(run, 'docs/result.md'), true);
+  assert.equal(core.isWithinRepo(run, '../outside/result.md'), false);
+  assert.throws(() => core.updateRun(run, { status: 'completed', summary: 'Done', artifacts: ['../outside/result.md'] }, 'manual'), /inside the run repository/);
+});
+
+test('prompts directly request skill execution without extra workflow rules', () => {
+  const run = core.createRun({ name: 'test-item-generation', file: '/skills/SKILL.md' }, '/project/code', '', 'Generate test cases');
+  const prompt = core.buildPrompt(run);
+  assert.match(prompt, /Execute the test-item-generation skill/);
+  assert.match(prompt, /Read its full definition at \/skills\/SKILL\.md/);
+  assert.match(prompt, /User request:\nGenerate test cases/);
+  assert.doesNotMatch(prompt, /Treat the selected skill as authoritative|do not add, omit|stop and ask the user/);
+  assert.doesNotMatch(prompt, /For test-case generation/);
 });
 
 test('requirement URLs are optional, web-only and cannot include credentials', () => {
