@@ -1,0 +1,31 @@
+# huddle60 policy (AI-DLC protocol).
+version: 1
+roles:
+  po:
+    - id: 286027161
+      login: tadev999
+  dev:
+    - id: 286027161
+      login: tadev999
+  maintainer:
+    - id: 286027161
+      login: tadev999
+lanes:
+  fast:
+    requires_po_approval: false
+  standard:
+    requires_po_approval: true
+  strict:
+    requires_po_approval: true
+sensitive_paths:
+  - ".github/**"
+  - "migrations/**"
+  - "src/auth/**"
+evidence:
+  branch: huddle60-evidence
+acceptance:
+  build_workflows:
+    - .github/workflows/build.yml
+planner:
+  max_nodes: 60
+  plan_ttl_days: 30
