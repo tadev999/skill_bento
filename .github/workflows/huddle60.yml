@@ -1,0 +1,22 @@
+name: huddle60
+on:
+  issue_comment:
+    types: [created, edited, deleted]
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  statuses: write
+
+jobs:
+  huddle60:
+    if: github.event_name == 'pull_request_target' || (github.event.issue.pull_request == null && github.event.sender.type != 'Bot' && (startsWith(github.event.comment.body, '/huddle60') || startsWith(github.event.comment.body, '/ai-dlc') || github.event.action != 'created'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: tadev999/huddle60@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          enabled: 'true'
